@@ -24,7 +24,11 @@ pub trait Game: Sized {
     fn init(assets: &Self::Assets) -> Result<Self, Self::Error>;
 
     /// Perform a world step.
-    fn step(&mut self, assets: &Self::Assets);
+    fn step(
+        &mut self,
+        assets: &Self::Assets,
+        events: impl Iterator<Item = <Self::Context as Context>::InputEvent>,
+    );
 
     /// Generate a scene from the game state,
     /// that can be rendered by the [Renderer].
@@ -40,15 +44,6 @@ pub trait Assets: Sized {
     fn get<T>(&self, handle: Self::Handle) -> Option<&'static T>;
 }
 
-/// Window context and event handler.
-pub trait Context: Sized + HasDisplayHandle + HasWindowHandle {
-    type Error: Debug;
-    fn init(title: &str) -> Result<Self, Self::Error>;
-    fn start_event_loop<G>(self, runner: GameRunner<G>) -> Result<(), Self::Error>
-    where
-        G: Game<Context = Self>;
-}
-
 /// A graphics renderer.
 pub trait Renderer: Sized {
     type Error: Debug;
@@ -57,6 +52,17 @@ pub trait Renderer: Sized {
     fn init<C: HasDisplayHandle + HasWindowHandle>(context: &C) -> Result<Self, Self::Error>;
     fn resize(&mut self, size: (u32, u32)) -> Result<(), Self::Error>;
     fn render(&mut self, scene: Self::Scene) -> Result<(), Self::Error>;
+}
+
+/// Window context and event handler.
+pub trait Context: Sized + HasDisplayHandle + HasWindowHandle {
+    type Error: Debug;
+    type InputEvent;
+
+    fn init(title: &str) -> Result<Self, Self::Error>;
+    fn start_event_loop<G>(self, runner: GameRunner<G>) -> Result<(), Self::Error>
+    where
+        G: Game<Context = Self>;
 }
 
 pub struct GameRunner<G: Game> {
@@ -82,8 +88,8 @@ impl<G: Game> GameRunner<G> {
             .expect("failed to start event loop");
     }
 
-    fn update(&mut self) {
-        self.state.step(&self.assets);
+    fn update(&mut self, events: impl Iterator<Item = <G::Context as Context>::InputEvent>) {
+        self.state.step(&self.assets, events);
         let scene = self.state.draw(&self.assets);
         self.renderer.render(scene).expect("failed to render scene");
     }
