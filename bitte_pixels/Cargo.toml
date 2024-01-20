@@ -1,8 +1,18 @@
 [package]
-name = "bitte_pixels"
+name = "graphics"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+log = "0.4.17"
+wgpu = {version = "0.19.0", features = [ "webgl" ]}
+raw-window-handle = "0.6.0"
+bytemuck = {version = "1.13.1", features = [ "derive" ] }
+bitte_core = { path = "../bitte_core" }
+pollster = "0.3.0"
+
+[dev-dependencies]
+winit = "0.29.0"
+rand = "0.8.5"

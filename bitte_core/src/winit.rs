@@ -1,7 +1,7 @@
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use winit::{
     dpi::PhysicalPosition,
-    event::{ElementState, Event, KeyEvent, MouseButton, WindowEvent},
+    event::{ElementState, Event, MouseButton, WindowEvent, KeyEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
     window::{Window, WindowBuilder},
 };
@@ -77,6 +77,11 @@ impl Context for Winit {
             };
         };
         self.event_loop.run(event_handler).map_err(|_| ())
+    }
+
+    fn size(&self) -> (u32, u32) {
+        let size = self.window.inner_size();
+        (size.width, size.height)
     }
 }
 

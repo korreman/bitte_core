@@ -18,8 +18,13 @@ impl Assets for () {
 impl Renderer for () {
     type Error = ();
     type Scene = ();
+    type InitParams = ();
 
-    fn init<C: HasDisplayHandle + HasWindowHandle>(_: &C) -> Result<Self, Self::Error> {
+    fn init<C: HasDisplayHandle + HasWindowHandle>(
+        _: &C,
+        _: (u32, u32),
+        _: (),
+    ) -> Result<Self, Self::Error> {
         Ok(())
     }
 

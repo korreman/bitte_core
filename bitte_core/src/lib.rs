@@ -12,6 +12,7 @@ pub mod winit;
 pub trait Game: Sized {
     const TITLE: &'static str;
 
+    /// General error type.
     type Error: Debug;
     /// The asset manager to use.
     type Assets: Assets;
@@ -48,8 +49,13 @@ pub trait Assets: Sized {
 pub trait Renderer: Sized {
     type Error: Debug;
     type Scene;
+    type InitParams;
 
-    fn init<C: HasDisplayHandle + HasWindowHandle>(context: &C) -> Result<Self, Self::Error>;
+    fn init<C: HasDisplayHandle + HasWindowHandle>(
+        context: &C,
+        size: (u32, u32),
+        params: Self::InitParams,
+    ) -> Result<Self, Self::Error>;
     fn resize(&mut self, size: (u32, u32)) -> Result<(), Self::Error>;
     fn render(&mut self, scene: Self::Scene) -> Result<(), Self::Error>;
 }
@@ -60,6 +66,7 @@ pub trait Context: Sized + HasDisplayHandle + HasWindowHandle {
     type InputEvent;
 
     fn init(title: &str) -> Result<Self, Self::Error>;
+    fn size(&self) -> (u32, u32);
     fn start_event_loop<G>(self, runner: GameRunner<G>) -> Result<(), Self::Error>
     where
         G: Game<Context = Self>;
@@ -72,11 +79,11 @@ pub struct GameRunner<G: Game> {
 }
 
 impl<G: Game> GameRunner<G> {
-    pub fn run() {
+    pub fn run(render_params: <G::Renderer as Renderer>::InitParams) {
         let context: G::Context = Context::init(G::TITLE).expect("failed to initialize context");
         let assets: G::Assets = Assets::init().expect("failed to initialize assets");
-        let renderer: G::Renderer =
-            Renderer::init(&context).expect("failed to initialize renderer");
+        let renderer: G::Renderer = Renderer::init(&context, context.size(), render_params)
+            .expect("failed to initialize renderer");
         let state = G::init(&assets).expect("failed to initialize game state");
         let runner = Self {
             state,
